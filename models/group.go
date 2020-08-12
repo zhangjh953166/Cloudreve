@@ -15,6 +15,7 @@ type Group struct {
 	WebDAVEnabled bool
 	SpeedLimit    int
 	Options       string `json:"-",gorm:"type:text"`
+	UpgroupID     uint
 
 	// 数据库忽略字段
 	PolicyList        []uint      `gorm:"-"`
