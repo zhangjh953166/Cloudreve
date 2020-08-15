@@ -18,6 +18,7 @@ type Folder struct {
 
 	// 数据库忽略字段
 	Position string `gorm:"-"`
+	IsShare  int    `gorm:"-"`
 }
 
 // Create 创建目录
@@ -51,6 +52,31 @@ func (folder *Folder) GetChildFolder() ([]Folder, error) {
 	if result.Error == nil {
 		for i := 0; i < len(folders); i++ {
 			folders[i].Position = path.Join(folder.Position, folder.Name)
+		}
+	}
+	return folders, result.Error
+}
+
+//子产品带上上级用户组的分享目录
+func (folder *Folder) RootFolderGetChildFolderWithShare(user *User) ([]Folder, error) {
+	var folders []Folder
+	result := DB.Where("parent_id = ?", folder.ID).Find(&folders)
+
+	if result.Error == nil {
+		for i := 0; i < len(folders); i++ {
+			folders[i].Position = path.Join(folder.Position, folder.Name)
+		}
+		//查找上级用户组的用户列表
+		var users []User
+		err := DB.Where("Group_ID = ?", user.Group.UpgroupID).Find(&users).Error
+		if err == nil {
+			var sharefolders []Folder = make([]Folder, len(users))
+			for i := 0; err == nil && i < len(users); i++ {
+				DB.Where("parent_id is NULL AND owner_id = ?", users[i].ID).Find(&sharefolders[i])
+				sharefolders[i].Name = users[i].Nick + "_folder"
+			}
+			var mergeFolders = append(folders, sharefolders...)
+			return mergeFolders, result.Error
 		}
 	}
 	return folders, result.Error

@@ -17,6 +17,7 @@ type DirectoryService struct {
 func (service *DirectoryService) ListDirectory(c *gin.Context) serializer.Response {
 	// 创建文件系统
 	fs, err := filesystem.NewFileSystemFromContext(c)
+	//fs, err := filesystem.NewFileSystemFromContextWithUpgroup(c);
 	if err != nil {
 		return serializer.Err(serializer.CodePolicyNotAllowed, err.Error(), err)
 	}

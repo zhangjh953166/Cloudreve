@@ -24,6 +24,8 @@ import (
 	"github.com/HFO4/cloudreve/pkg/serializer"
 	"github.com/gin-gonic/gin"
 	cossdk "github.com/tencentyun/cos-go-sdk-v5"
+
+	"fmt"
 )
 
 // FSPool 文件系统资源池
@@ -316,4 +318,18 @@ func (fs *FileSystem) SetTargetByInterface(target interface{}) error {
 func (fs *FileSystem) CleanTargets() {
 	fs.FileTarget = fs.FileTarget[:0]
 	fs.DirTarget = fs.DirTarget[:0]
+}
+
+//获取用户目录以及所在用户组上一级的用户列表以及目录列表
+func NewFileSystemFromContextWithUpgroup(c *gin.Context) (*FileSystem, error) {
+	user, exist := c.Get("user")
+	if !exist {
+		return NewAnonymousFileSystem()
+	}
+	fs, err := NewFileSystem(user.(*model.User))
+	fmt.Println("user:", user.(*model.User).Group.UpgroupID)
+	// var res []model.Group
+	var users []model.User
+	model.DB.Model(model.User{}).Where("Group_ID = ?", user.(*model.User).Group.UpgroupID).Find(&users)
+	return fs, err
 }

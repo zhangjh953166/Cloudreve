@@ -58,6 +58,23 @@ func (user *User) Root() (*Folder, error) {
 	return &folder, err
 }
 
+func (user *User) RootWithShare() (*Folder, error) {
+	var folder Folder
+	err := DB.Where("parent_id is NULL AND owner_id = ?", user.ID).First(&folder).Error
+	if err == nil {
+		var users []User
+		err := DB.Where("Group_ID = ?", user.Group.UpgroupID).Find(&users).Error
+		var folders []Folder = make([]Folder, len(users))
+		for i := 0; err == nil && i < len(users); i++ {
+			DB.Where("parent_id is NULL AND owner_id = ?", users[i].ID).Find(&folders[i])
+		}
+		for i := 0; err == nil && i < len(folders); i++ {
+			folders[i].IsShare = 1
+		}
+	}
+	return &folder, err
+}
+
 // DeductionStorage 减少用户已用容量
 func (user *User) DeductionStorage(size uint64) bool {
 	if size == 0 {

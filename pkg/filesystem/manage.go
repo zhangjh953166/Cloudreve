@@ -9,6 +9,7 @@ import (
 	"github.com/HFO4/cloudreve/pkg/serializer"
 	"github.com/HFO4/cloudreve/pkg/util"
 	"path"
+	"reflect"
 	"strings"
 )
 
@@ -277,7 +278,12 @@ func (fs *FileSystem) List(ctx context.Context, dirPath string, pathProcessor fu
 	var childFiles []model.File
 
 	// 获取子目录
-	childFolders, _ = folder.GetChildFolder()
+	//  reflect.ValueOf(a).IsNil()
+	if reflect.ValueOf(folder.ParentID).IsNil() {
+		childFolders, _ = folder.RootFolderGetChildFolderWithShare(fs.User)
+	} else {
+		childFolders, _ = folder.GetChildFolder()
+	}
 
 	// 获取子文件
 	childFiles, _ = folder.GetChildFiles()
